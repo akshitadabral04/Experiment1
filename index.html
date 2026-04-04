@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cognitive Experiment</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- ============================================================
+       PAGES  (only one visible at a time via JS)
+  ============================================================ -->
+
+  <!-- 0. Participant Info -->
+  <div id="page-info" class="page active">
+    <div class="card">
+      <div class="card-title">Participant Information</div>
+      <div class="form-group">
+        <label for="input-id">Participant ID</label>
+        <input type="text" id="input-id" placeholder="e.g. P001" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <label for="input-name">Participant Name</label>
+        <input type="text" id="input-name" placeholder="Your name" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <label for="input-phase">Cycle Phase</label>
+        <input type="text" id="input-phase" placeholder="e.g. Follicular" autocomplete="off"/>
+      </div>
+      <button id="btn-start-info" class="btn-primary">Continue</button>
+    </div>
+  </div>
+
+  <!-- 1. Flanker Welcome -->
+  <div id="page-flanker-welcome" class="page">
+    <div class="card wide">
+      <div class="card-title">Welcome!</div>
+      <p>Thank you for taking part in this study.</p>
+      <p>In this task, you will be responding to symbols shown on the screen.
+         Please stay focused and follow the instructions carefully as they appear.</p>
+      <p>Make sure you are seated comfortably and ready to begin.</p>
+      <p class="press-hint">Press any key to continue</p>
+    </div>
+  </div>
+
+  <!-- 2. Flanker Instructions -->
+  <div id="page-flanker-inst" class="page">
+    <div class="card wide">
+      <div class="card-title">Instructions — Flanker Task</div>
+      <p>On each trial, you will see a group of arrows.<br>
+         Focus only on the <strong>arrow in the center</strong>.</p>
+      <div class="key-rules">
+        <div class="key-rule">Press <kbd>1</kbd> if the center arrow points right &nbsp;( &gt; )</div>
+        <div class="key-rule">Press <kbd>2</kbd> if the center arrow points left &nbsp;&nbsp;( &lt; )</div>
+      </div>
+      <p>Try to respond as quickly and accurately as possible.</p>
+      <p class="press-hint">Press any key to continue</p>
+    </div>
+  </div>
+
+  <!-- 3. Flanker Practice Intro -->
+  <div id="page-flanker-practice-intro" class="page">
+    <div class="card wide">
+      <div class="card-title">Practice Trials</div>
+      <p>Before the main experiment, let's do a few practice trials<br>
+         so you can get familiar with the task.</p>
+      <p class="press-hint">Press any key to begin</p>
+    </div>
+  </div>
+
+  <!-- 4. Flanker Pre-Main -->
+  <div id="page-flanker-premain" class="page">
+    <div class="card wide">
+      <div class="card-title">Great work!</div>
+      <p>Now the main experiment will begin.</p>
+      <div class="key-rules">
+        <div class="key-rule">Press <kbd>1</kbd> if the center arrow points right &nbsp;( &gt; )</div>
+        <div class="key-rule">Press <kbd>2</kbd> if the center arrow points left &nbsp;&nbsp;( &lt; )</div>
+      </div>
+      <p>Please respond as quickly and accurately as possible.<br>
+         <strong>No feedback will be shown</strong> during the main experiment.</p>
+      <p class="press-hint">Press any key to begin</p>
+    </div>
+  </div>
+
+  <!-- 5. Flanker Break 1 -->
+  <div id="page-flanker-break1" class="page">
+    <div class="card wide">
+      <div class="break-icon">&#10073;&#10073;</div>
+      <div class="card-title">Break Time</div>
+      <p>You have completed the first part of the Flanker task.</p>
+      <p>Please take a short break whenever you are ready.</p>
+      <p class="press-hint">Press any key to resume</p>
+    </div>
+  </div>
+
+  <!-- 6. Flanker Break 2 -->
+  <div id="page-flanker-break2" class="page">
+    <div class="card wide">
+      <div class="break-icon">&#10073;&#10073;</div>
+      <div class="card-title">Break Time</div>
+      <p>You have completed the second part of the Flanker task.</p>
+      <p>Please take a short break whenever you are ready.</p>
+      <p class="press-hint">Press any key to resume</p>
+    </div>
+  </div>
+
+  <!-- 7. Between-task interval -->
+  <div id="page-interval" class="page">
+    <div class="card wide">
+      <div class="card-title">Well Done!</div>
+      <p>You have completed the <strong>Flanker Task</strong>.</p>
+      <p>Please take a few minutes to rest before the next task begins.</p>
+      <p>The next task is the <strong>Go / No-Go Task</strong>.<br>
+         New instructions will appear when you are ready.</p>
+      <p class="press-hint">Press any key to continue</p>
+    </div>
+  </div>
+
+  <!-- 8. GoNoGo Welcome -->
+  <div id="page-gng-welcome" class="page">
+    <div class="card wide">
+      <div class="card-title">Go / No-Go Task</div>
+      <p>Thank you for continuing.</p>
+      <p>In this next task, letters will appear on the screen one at a time.<br>
+         Please stay focused and respond carefully as instructed.</p>
+      <p>Make sure you are comfortable and ready to begin.</p>
+      <p class="press-hint">Press any key to continue</p>
+    </div>
+  </div>
+
+  <!-- 9. GoNoGo Instructions -->
+  <div id="page-gng-inst" class="page">
+    <div class="card wide">
+      <div class="card-title">Instructions — Go / No-Go Task</div>
+      <p>On each trial, a letter will appear in the center of the screen.</p>
+      <div class="key-rules">
+        <div class="key-rule">Press <kbd>1</kbd> when you see <strong>O</strong> or <strong>Q</strong></div>
+        <div class="key-rule">Do <strong>NOT</strong> press anything when you see <strong>M</strong> or <strong>N</strong></div>
+      </div>
+      <p>Respond as quickly and accurately as possible when you press,<br>
+         and hold your response when needed.<br>
+         Keep your eyes on the center of the screen.</p>
+      <p class="press-hint">Press any key to continue</p>
+    </div>
+  </div>
+
+  <!-- 10. GoNoGo Practice Intro -->
+  <div id="page-gng-practice-intro" class="page">
+    <div class="card wide">
+      <div class="card-title">Practice Trials</div>
+      <p>Before the main experiment, let's do a few practice trials.<br>
+         Feedback will be shown after each trial.</p>
+      <p class="press-hint">Press any key to begin</p>
+    </div>
+  </div>
+
+  <!-- 11. GoNoGo Pre-Main -->
+  <div id="page-gng-premain" class="page">
+    <div class="card wide">
+      <div class="card-title">Great work!</div>
+      <p>Now the main Go/No-Go experiment will begin.</p>
+      <div class="key-rules">
+        <div class="key-rule">Press <kbd>1</kbd> when you see <strong>O</strong> or <strong>Q</strong></div>
+        <div class="key-rule">Do <strong>NOT</strong> press anything when you see <strong>M</strong> or <strong>N</strong></div>
+      </div>
+      <p>Please respond as quickly and accurately as possible.<br>
+         <strong>No feedback will be shown</strong> during the main experiment.</p>
+      <p class="press-hint">Press any key to begin</p>
+    </div>
+  </div>
+
+  <!-- 12. GoNoGo Break 1 -->
+  <div id="page-gng-break1" class="page">
+    <div class="card wide">
+      <div class="break-icon">&#10073;&#10073;</div>
+      <div class="card-title">Break Time</div>
+      <p>You have completed the first part of the Go/No-Go task.</p>
+      <p>Please take a short break whenever you are ready.</p>
+      <p class="press-hint">Press any key to resume</p>
+    </div>
+  </div>
+
+  <!-- 13. GoNoGo Break 2 -->
+  <div id="page-gng-break2" class="page">
+    <div class="card wide">
+      <div class="break-icon">&#10073;&#10073;</div>
+      <div class="card-title">Break Time</div>
+      <p>You have completed the second part of the Go/No-Go task.</p>
+      <p>Please take a short break whenever you are ready.</p>
+      <p class="press-hint">Press any key to resume</p>
+    </div>
+  </div>
+
+  <!-- 14. Thank You -->
+  <div id="page-thankyou" class="page">
+    <div class="card wide">
+      <div class="card-title">Thank You!</div>
+      <p>You have successfully completed both tasks.</p>
+      <p>Your responses have been saved.</p>
+      <p>You may now inform the experimenter that you have finished.</p>
+      <div id="save-status" class="save-status"></div>
+      <button id="btn-download-flanker" class="btn-secondary" style="display:none">
+        Download Flanker Data (backup)
+      </button>
+      <button id="btn-download-gng" class="btn-secondary" style="display:none">
+        Download Go/No-Go Data (backup)
+      </button>
+    </div>
+  </div>
+
+  <!-- TRIAL SCREEN — shared by both tasks -->
+  <div id="page-trial" class="page trial-page">
+    <div id="trial-display" class="trial-display"></div>
+  </div>
+
+  <script src="experiment.js"></script>
+</body>
+</html>
