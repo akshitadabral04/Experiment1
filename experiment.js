@@ -1,26 +1,61 @@
 // ============================================================
 // experiment.js  —  Combined Flanker + Go/No-Go Experiment
-// Follows architecture from Lukács & Haasnoot (2024)
+// Pure JavaScript — no server, no PHP
+// Hosted on GitHub Pages, data saved to Google Form
 // ============================================================
-// DEPLOYMENT:
-//   1. Upload all files to your PHP-capable web server
-//   2. Make sure save_data.php is in the same directory
-//   3. Participants open index.html via the server URL
+//
+// HOW TO DEPLOY ON GITHUB PAGES:
+//   1. Create a GitHub repo
+//   2. Upload index.html, style.css, experiment.js
+//   3. Go to Settings → Pages → Branch: main → Save
+//   4. Your link: https://yourusername.github.io/yourrepo/
+//
+// HOW TO CONNECT YOUR GOOGLE FORM:
+//   1. Fill in GOOGLE_FORM_ID below (from your form URL)
+//   2. That's it — all entry numbers are already mapped
+//
 // ============================================================
 
 'use strict';
 
 // ============================================================
+// CONFIGURATION — FILL THIS IN BEFORE DEPLOYING
+// ============================================================
+
+// Your Google Form ID — found in your form URL:
+// https://docs.google.com/forms/d/e/  →→ THIS PART ←←  /viewform
+var GOOGLE_FORM_ID = '1FAIpQLSfZIFLisQ_0sB0J9IAOCzUb_6rLMumDWF8OOlVY8BVT_hGkYg';
+
+// Entry numbers mapped to your form fields (from the screenshot)
+// DO NOT change these unless your form fields change
+var ENTRY = {
+  participant_id       : 'entry.1923761713',
+  participant_name     : 'entry.834499527',
+  cycle_phase          : 'entry.1560876806',
+  task                 : 'entry.976259838',
+  block                : 'entry.1233612005',
+  trial_number         : 'entry.205965830',
+  stimulus             : 'entry.1766111037',
+  condition            : 'entry.1647840464',   // flanker only, blank for gng
+  stimulus_direction   : 'entry.1484080341',   // flanker only, blank for gng
+  trial_type           : 'entry.1557172474',   // gng only, blank for flanker
+  correct_response     : 'entry.1832255790',
+  participant_response : 'entry.264588357',
+  response_type        : 'entry.799037069',    // gng only, blank for flanker
+  accuracy             : 'entry.1360367772',
+  reaction_time_ms     : 'entry.553684159',
+};
+
+// ============================================================
 // 1. GLOBAL STATE
 // ============================================================
 
-const EXP = {
-  participantId   : '',
-  participantName : '',
-  cyclePhase      : '',
-  flankerData     : [],   // one row per trial
-  gngData         : [],   // one row per trial
-  currentPage     : 'page-info',
+var EXP = {
+  participantId    : '',
+  participantName  : '',
+  cyclePhase       : '',
+  flankerData      : [],
+  gngData          : [],
   keyListenerActive: false,
 };
 
@@ -33,11 +68,8 @@ function showPage(id) {
     p.classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
-  EXP.currentPage = id;
 }
 
-// Attach keypress listener for message screens
-// (removes itself after one press, ignoring Shift / Ctrl / Alt / Meta)
 function waitKey(callback) {
   if (EXP.keyListenerActive) return;
   EXP.keyListenerActive = true;
@@ -51,7 +83,7 @@ function waitKey(callback) {
 }
 
 // ============================================================
-// 3. PARTICIPANT INFO FORM
+// 3. PARTICIPANT INFO
 // ============================================================
 
 document.getElementById('btn-start-info').addEventListener('click', function() {
@@ -66,11 +98,17 @@ document.getElementById('btn-start-info').addEventListener('click', function() {
   EXP.participantName = pname;
   EXP.cyclePhase      = phase;
   showPage('page-flanker-welcome');
-  waitKey(function() { showPage('page-flanker-inst'); waitKey(function() { showPage('page-flanker-practice-intro'); waitKey(startFlankerPractice); }); });
+  waitKey(function() {
+    showPage('page-flanker-inst');
+    waitKey(function() {
+      showPage('page-flanker-practice-intro');
+      waitKey(startFlankerPractice);
+    });
+  });
 });
 
 // ============================================================
-// 4. UTILITY FUNCTIONS
+// 4. UTILITIES
 // ============================================================
 
 function shuffle(arr) {
@@ -96,7 +134,6 @@ function setTrialDisplay(html) {
 // 5. FLANKER TASK
 // ============================================================
 
-// --- Trial definitions ---
 var FLANKER_STIMULI = [
   { stimulus: '++>++', condition: 'neutral',     direction: 'right', correctKey: '1' },
   { stimulus: '++<++', condition: 'neutral',     direction: 'left',  correctKey: '2' },
@@ -108,11 +145,9 @@ var FLANKER_STIMULI = [
 
 function buildFlankerPractice() {
   var trials = FLANKER_STIMULI.slice();
-  var extras = [
-    FLANKER_STIMULI[Math.floor(Math.random() * 6)],
-    FLANKER_STIMULI[Math.floor(Math.random() * 6)],
-  ];
-  return shuffle(trials.concat(extras));
+  trials.push(FLANKER_STIMULI[Math.floor(Math.random() * 6)]);
+  trials.push(FLANKER_STIMULI[Math.floor(Math.random() * 6)]);
+  return shuffle(trials);
 }
 
 function buildFlankerMain() {
@@ -124,28 +159,20 @@ function buildFlankerMain() {
   return shuffle(trials);
 }
 
-// --- Run a single flanker trial ---
 // Timing: fixation 500ms → stimulus 250ms → blank 1200ms
-// Response collected during stimulus + blank windows combined
 function runFlankerTrial(trialInfo, trialNumber, block, withFeedback, onDone) {
   var stimulus   = trialInfo.stimulus;
   var condition  = trialInfo.condition;
   var direction  = trialInfo.direction;
   var correctKey = trialInfo.correctKey;
-
   var responseKey = null;
   var responseRT  = null;
   var stimOnset   = null;
 
-  // Show trial page
   showPage('page-trial');
-
-  // FIXATION 500ms
   setTrialDisplay('<div class="fixation">+</div>');
 
   setTimeout(function() {
-
-    // STIMULUS 250ms
     setTrialDisplay('<div class="stimulus">' + stimulus + '</div>');
     stimOnset = performance.now();
 
@@ -159,83 +186,68 @@ function runFlankerTrial(trialInfo, trialNumber, block, withFeedback, onDone) {
     document.addEventListener('keydown', responseHandler);
 
     setTimeout(function() {
-
-      // BLANK 1200ms (keep collecting response)
       setTrialDisplay('');
 
       setTimeout(function() {
         document.removeEventListener('keydown', responseHandler);
 
-        // Determine accuracy
-        var accuracy;
-        if (responseKey === null) {
-          accuracy = 'no_response';
-        } else {
-          accuracy = (responseKey === correctKey) ? 1 : 0;
-        }
+        var accuracy = responseKey === null ? 'no_response'
+                     : (responseKey === correctKey ? 1 : 0);
 
-        // Store trial data
         EXP.flankerData.push({
           participant_id       : EXP.participantId,
           participant_name     : EXP.participantName,
           cycle_phase          : EXP.cyclePhase,
+          task                 : 'flanker',
           block                : block,
           trial_number         : trialNumber,
           stimulus             : stimulus,
           condition            : condition,
           stimulus_direction   : direction,
+          trial_type           : '',
           correct_response     : correctKey,
           participant_response : responseKey || 'none',
+          response_type        : '',
           accuracy             : accuracy,
           reaction_time_ms     : responseRT !== null ? Math.round(responseRT) : 'no_response',
         });
 
-        // Feedback (practice only)
         if (withFeedback) {
           var fbClass, fbText;
-          if (responseKey === null) {
-            fbClass = 'timeout'; fbText = 'No Response!';
-          } else if (accuracy === 1) {
-            fbClass = 'correct'; fbText = 'Correct!';
-          } else {
-            fbClass = 'incorrect'; fbText = 'Incorrect!';
-          }
+          if (responseKey === null)          { fbClass = 'timeout';   fbText = 'No Response!'; }
+          else if (accuracy === 1)           { fbClass = 'correct';   fbText = 'Correct!';     }
+          else                               { fbClass = 'incorrect'; fbText = 'Incorrect!';   }
           setTrialDisplay('<div class="feedback ' + fbClass + '">' + fbText + '</div>');
-          setTimeout(function() { onDone(); }, 800);
+          setTimeout(onDone, 800);
         } else {
           onDone();
         }
-
-      }, 1200); // blank duration
-    }, 250);   // stimulus duration
-  }, 500);     // fixation duration
+      }, 1200);
+    }, 250);
+  }, 500);
 }
 
-// --- Run a block of flanker trials sequentially ---
 function runFlankerBlock(trials, block, withFeedback, onBlockDone) {
   var index = 0;
   function next() {
     if (index >= trials.length) { onBlockDone(); return; }
-    var t = trials[index];
-    index++;
+    var t = trials[index]; index++;
     runFlankerTrial(t, index, block, withFeedback, next);
   }
   next();
 }
 
-// --- Flanker flow ---
 var flankerMainTrials;
 
 function startFlankerPractice() {
-  var practiceTrials = buildFlankerPractice();
-  runFlankerBlock(practiceTrials, 'practice', true, function() {
+  runFlankerBlock(buildFlankerPractice(), 'practice', true, function() {
     showPage('page-flanker-premain');
     waitKey(startFlankerMain);
   });
 }
 
 function startFlankerMain() {
-  flankerMainTrials = buildFlankerMain(); // build once, split into 3
+  flankerMainTrials = buildFlankerMain();
   runFlankerBlock(flankerMainTrials.slice(0, 80), 'main', false, function() {
     showPage('page-flanker-break1');
     waitKey(function() {
@@ -243,8 +255,8 @@ function startFlankerMain() {
         showPage('page-flanker-break2');
         waitKey(function() {
           runFlankerBlock(flankerMainTrials.slice(160, 240), 'main', false, function() {
-            // Save flanker data, then move on
-            saveData('flanker', function() {
+            showSavingScreen('Saving Flanker data to Google Form...');
+            submitToGoogleForm(EXP.flankerData, function() {
               showPage('page-interval');
               waitKey(startGNG);
             });
@@ -273,7 +285,7 @@ function buildGNGPractice() {
 }
 
 function buildGNGMain() {
-  var counts = { 'O':90, 'Q':90, 'M':30, 'N':30 };
+  var counts = { 'O':90,'Q':90,'M':30,'N':30 };
   var trials = [];
   GNG_STIMULI.forEach(function(s) {
     trials = trials.concat(repeat(s, counts[s.letter]));
@@ -281,35 +293,19 @@ function buildGNGMain() {
   return shuffle(trials);
 }
 
-function classifyGNG(responseKey, trialType) {
-  if (trialType === 'go')   return responseKey === '1' ? 'hit'               : 'miss';
-  return responseKey === null ? 'correct_rejection' : 'false_alarm';
-}
-
-function accuracyGNG(responseKey, trialType) {
-  if (trialType === 'go')   return responseKey === '1' ? 1 : 0;
-  return responseKey === null ? 1 : 0;
-}
-
-// --- Run a single GNG trial ---
 // Timing: fixation 300ms → stimulus 200ms → blank 1000ms
 function runGNGTrial(trialInfo, trialNumber, block, withFeedback, onDone) {
   var letter          = trialInfo.letter;
   var trialType       = trialInfo.trialType;
   var correctResponse = trialInfo.correctResponse;
-
   var responseKey = null;
   var responseRT  = null;
   var stimOnset   = null;
 
   showPage('page-trial');
-
-  // FIXATION 300ms
   setTrialDisplay('<div class="fixation">+</div>');
 
   setTimeout(function() {
-
-    // STIMULUS 200ms
     setTrialDisplay('<div class="stimulus">' + letter + '</div>');
     stimOnset = performance.now();
 
@@ -323,23 +319,30 @@ function runGNGTrial(trialInfo, trialNumber, block, withFeedback, onDone) {
     document.addEventListener('keydown', responseHandler);
 
     setTimeout(function() {
-
-      // BLANK 1000ms
       setTrialDisplay('');
 
       setTimeout(function() {
         document.removeEventListener('keydown', responseHandler);
 
-        var acc  = accuracyGNG(responseKey, trialType);
-        var rtype = classifyGNG(responseKey, trialType);
+        var rtype, acc;
+        if (trialType === 'go') {
+          rtype = responseKey === '1' ? 'hit' : 'miss';
+          acc   = responseKey === '1' ? 1     : 0;
+        } else {
+          rtype = responseKey === null ? 'correct_rejection' : 'false_alarm';
+          acc   = responseKey === null ? 1 : 0;
+        }
 
         EXP.gngData.push({
           participant_id       : EXP.participantId,
           participant_name     : EXP.participantName,
           cycle_phase          : EXP.cyclePhase,
+          task                 : 'gng',
           block                : block,
           trial_number         : trialNumber,
           stimulus             : letter,
+          condition            : '',
+          stimulus_direction   : '',
           trial_type           : trialType,
           correct_response     : correctResponse,
           participant_response : responseKey || 'none',
@@ -352,22 +355,20 @@ function runGNGTrial(trialInfo, trialNumber, block, withFeedback, onDone) {
           var fbClass = acc === 1 ? 'correct' : 'incorrect';
           var fbText  = acc === 1 ? 'Correct!' : 'Incorrect!';
           setTrialDisplay('<div class="feedback ' + fbClass + '">' + fbText + '</div>');
-          setTimeout(function() { onDone(); }, 800);
+          setTimeout(onDone, 800);
         } else {
           onDone();
         }
-
-      }, 1000); // blank
-    }, 200);    // stimulus
-  }, 300);      // fixation
+      }, 1000);
+    }, 200);
+  }, 300);
 }
 
 function runGNGBlock(trials, block, withFeedback, onBlockDone) {
   var index = 0;
   function next() {
     if (index >= trials.length) { onBlockDone(); return; }
-    var t = trials[index];
-    index++;
+    var t = trials[index]; index++;
     runGNGTrial(t, index, block, withFeedback, next);
   }
   next();
@@ -387,8 +388,7 @@ function startGNG() {
 }
 
 function startGNGPractice() {
-  var practiceTrials = buildGNGPractice();
-  runGNGBlock(practiceTrials, 'practice', true, function() {
+  runGNGBlock(buildGNGPractice(), 'practice', true, function() {
     showPage('page-gng-premain');
     waitKey(startGNGMain);
   });
@@ -403,7 +403,8 @@ function startGNGMain() {
         showPage('page-gng-break2');
         waitKey(function() {
           runGNGBlock(gngMainTrials.slice(160, 240), 'main', false, function() {
-            saveData('gng', function() {
+            showSavingScreen('Saving Go/No-Go data to Google Form...');
+            submitToGoogleForm(EXP.gngData, function() {
               showThankYou();
             });
           });
@@ -414,110 +415,82 @@ function startGNGMain() {
 }
 
 // ============================================================
-// 7. DATA SAVING
+// 7. GOOGLE FORM SUBMISSION
+// ============================================================
+// Uses a hidden iframe + dynamically created forms.
+// Each trial = one form submission (one row in Google Sheets).
+// 300ms delay between rows to avoid rate limiting.
+// Flanker-only fields are blank on GNG rows and vice versa.
 // ============================================================
 
-// Convert array of row objects to CSV string
-function toCSV(rows, headers) {
-  var lines = [headers.join(',')];
-  rows.forEach(function(r) {
-    var line = headers.map(function(h) {
-      var val = (r[h] !== undefined && r[h] !== null) ? String(r[h]) : '';
-      // Escape quotes and wrap in quotes if contains comma/quote/newline
-      if (val.indexOf(',') !== -1 || val.indexOf('"') !== -1 || val.indexOf('\n') !== -1) {
-        val = '"' + val.replace(/"/g, '""') + '"';
-      }
-      return val;
-    });
-    lines.push(line.join(','));
+// Create hidden iframe once — reused for all submissions
+var gformIframe = document.createElement('iframe');
+gformIframe.name = 'gform_iframe';
+gformIframe.style.display = 'none';
+document.body.appendChild(gformIframe);
+
+function submitRowToGoogleForm(row) {
+  var formEl    = document.createElement('form');
+  formEl.method = 'POST';
+  formEl.action = 'https://docs.google.com/forms/d/e/' + GOOGLE_FORM_ID + '/formResponse';
+  formEl.target = 'gform_iframe';
+  formEl.style.display = 'none';
+
+  // Add every field as a hidden input using its entry number
+  Object.keys(ENTRY).forEach(function(field) {
+    var val   = (row[field] !== undefined && row[field] !== null) ? String(row[field]) : '';
+    var input = document.createElement('input');
+    input.type  = 'hidden';
+    input.name  = ENTRY[field];
+    input.value = val;
+    formEl.appendChild(input);
   });
-  return lines.join('\n');
+
+  document.body.appendChild(formEl);
+  formEl.submit();
+  document.body.removeChild(formEl);
 }
 
-var FLANKER_HEADERS = [
-  'participant_id','participant_name','cycle_phase','block',
-  'trial_number','stimulus','condition','stimulus_direction',
-  'correct_response','participant_response','accuracy','reaction_time_ms'
-];
+// Submit all rows sequentially with 300ms gap
+function submitToGoogleForm(rows, onDone) {
+  if (!rows || rows.length === 0) { onDone(); return; }
+  var index = 0;
 
-var GNG_HEADERS = [
-  'participant_id','participant_name','cycle_phase','block',
-  'trial_number','stimulus','trial_type','correct_response',
-  'participant_response','response_type','accuracy','reaction_time_ms'
-];
+  // Update progress counter on saving screen
+  function updateProgress() {
+    var el = document.getElementById('saving-count');
+    if (el) el.textContent = index + ' / ' + rows.length + ' rows submitted';
+  }
 
-// Try to POST to save_data.php; fallback to local download on failure
-function saveData(taskName, onDone) {
-  var isGNG    = taskName === 'gng';
-  var rows     = isGNG ? EXP.gngData     : EXP.flankerData;
-  var headers  = isGNG ? GNG_HEADERS     : FLANKER_HEADERS;
-  var filename = isGNG
-    ? 'gonogo_'  + EXP.participantId + '_' + getTimestamp() + '.csv'
-    : 'flanker_' + EXP.participantId + '_' + getTimestamp() + '.csv';
+  function next() {
+    if (index >= rows.length) { onDone(); return; }
+    submitRowToGoogleForm(rows[index]);
+    index++;
+    updateProgress();
+    setTimeout(next, 300);
+  }
+  next();
+}
 
-  var csvContent = toCSV(rows, headers);
+// ============================================================
+// 8. SAVING SCREEN + THANK YOU
+// ============================================================
 
-  // Attempt server save via PHP
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', 'save_data.php', true);
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-  xhr.timeout = 8000;
-
-  xhr.onload = function() {
-    if (xhr.status === 200 && xhr.responseText.indexOf('ok') !== -1) {
-      onDone();
-    } else {
-      // Server responded but not OK — trigger download fallback
-      downloadFallback(filename, csvContent, taskName);
-      onDone();
-    }
-  };
-
-  xhr.onerror = xhr.ontimeout = function() {
-    // No server / connection issue — trigger download fallback
-    downloadFallback(filename, csvContent, taskName);
-    onDone();
-  };
-
-  xhr.send(
-    'filename=' + encodeURIComponent(filename) +
-    '&data='    + encodeURIComponent(csvContent)
+function showSavingScreen(msg) {
+  // Temporarily show trial page with a saving message
+  showPage('page-trial');
+  setTrialDisplay(
+    '<div style="text-align:center; color:#888; font-family: Courier New, monospace;">' +
+    '<div style="font-size:18px; margin-bottom:16px;">' + msg + '</div>' +
+    '<div id="saving-count" style="font-size:14px; color:#555;">Preparing...</div>' +
+    '<div style="font-size:12px; color:#333; margin-top:20px;">Please wait — do not close this window</div>' +
+    '</div>'
   );
 }
-
-function downloadFallback(filename, csvContent, taskName) {
-  // Show download buttons on thank-you page so participant can save file
-  var btnId = taskName === 'gng' ? 'btn-download-gng' : 'btn-download-flanker';
-  var btn = document.getElementById(btnId);
-  btn.style.display = 'inline-block';
-  btn.addEventListener('click', function() {
-    triggerDownload(filename, csvContent);
-  });
-}
-
-function triggerDownload(filename, csvContent) {
-  var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href     = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function getTimestamp() {
-  return new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-}
-
-// ============================================================
-// 8. THANK YOU
-// ============================================================
 
 function showThankYou() {
   showPage('page-thankyou');
   var status = document.getElementById('save-status');
-  status.textContent = 'All data saved successfully.';
+  status.textContent = 'All data submitted to Google Form successfully.';
   status.className = 'save-status ok';
 }
